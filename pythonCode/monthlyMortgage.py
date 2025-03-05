@@ -1,6 +1,7 @@
 import pandas as pd
 import cpi
 from io import StringIO
+from datetime import date
 
 # Hard-coded CSV data as a multi-line string
 data = """Year,Average 30-year fixed mortgage rate,Typical monthly mortgage payment
@@ -59,20 +60,23 @@ data = """Year,Average 30-year fixed mortgage rate,Typical monthly mortgage paym
 2023,7.00,2270.15
 2024,6.90,2207.36"""
 
-# Create DataFrame from the hard-coded CSV data
+# Create a DataFrame from the hard-coded CSV data
 df = pd.read_csv(StringIO(data))
 
 # Set the base year for inflation adjustment
 base_year = 2024
 
-# Adjust the mortgage payment to 2024 dollars.
-# Using January (month=1) for the CPI lookup.
+# Adjust each payment to 2024 dollars using January 1 of the given year and target year.
 df['Adjusted Mortgage Payment'] = df.apply(
-    lambda row: cpi.inflate(row['Typical monthly mortgage payment'], row['Year'], to=base_year, month=1),
+    lambda row: cpi.inflate(
+        row["Typical monthly mortgage payment"],
+        date(int(row["Year"]), 1, 1),
+        to=date(base_year, 1, 1)
+    ),
     axis=1
 )
 
-# Output the new CSV file to the root folder
+# Write the updated DataFrame to a CSV file in the current directory (root)
 output_csv = "monthlyMortgage_adjusted.csv"
 df.to_csv(output_csv, index=False)
 
